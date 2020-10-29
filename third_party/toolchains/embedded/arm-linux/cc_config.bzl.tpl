@@ -245,11 +245,11 @@ def _impl(ctx):
                         flag_group(
                             flags = [
                                 "-isystem",
-                                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/8.3.0/include",
+                                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/6.1.1/include",
                                 "-isystem",
-                                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/8.3.0/include-fixed",
+                                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/6.1.1/include-fixed",
                                 "-isystem",
-                                "%{AARCH64_COMPILER_PATH}%/aarch64-linux-gnu/include/c++/8.3.0/",
+                                "%{AARCH64_COMPILER_PATH}%/aarch64-linux-gnu/include/c++/6.1.1/",
                                 "-isystem",
                                 "%{AARCH64_COMPILER_PATH}%/aarch64-linux-gnu/libc/usr/include/",
                                 "-isystem",
@@ -344,11 +344,11 @@ def _impl(ctx):
                         flag_group(
                             flags = [
                                 "-isystem",
-                                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/8.3.0/include",
+                                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/6.1.1/include",
                                 "-isystem",
-                                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/8.3.0/include-fixed",
+                                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/6.1.1/include-fixed",
                                 "-isystem",
-                                "%{ARMHF_COMPILER_PATH}%/arm-linux-gnueabihf/include/c++/8.3.0/",
+                                "%{ARMHF_COMPILER_PATH}%/arm-linux-gnueabihf/include/c++/6.1.1/",
                                 "-isystem",
                                 "%{ARMHF_COMPILER_PATH}%/arm-linux-gnueabihf/libc/usr/include/",
                                 "-isystem",
@@ -470,17 +470,17 @@ def _impl(ctx):
 
     if (ctx.attr.cpu == "aarch64"):
         cxx_builtin_include_directories = [
-                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/8.3.0/include",
-                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/8.3.0/include-fixed",
-                "%{AARCH64_COMPILER_PATH}%/aarch64-linux-gnu/include/c++/8.3.0/",
+                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/6.1.1/include",
+                "%{AARCH64_COMPILER_PATH}%/lib/gcc/aarch64-linux-gnu/6.1.1/include-fixed",
+                "%{AARCH64_COMPILER_PATH}%/aarch64-linux-gnu/include/c++/6.1.1/",
                 "%{AARCH64_COMPILER_PATH}%/aarch64-linux-gnu/libc/usr/include/",
                 "/usr/include",
             ]
     elif (ctx.attr.cpu == "armhf"):
         cxx_builtin_include_directories = [
-                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/8.3.0/include",
-                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/8.3.0/include-fixed",
-                "%{ARMHF_COMPILER_PATH}%/arm-linux-gnueabihf/include/c++/8.3.0/",
+                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/6.1.1/include",
+                "%{ARMHF_COMPILER_PATH}%/lib/gcc/arm-linux-gnueabihf/6.1.1/include-fixed",
+                "%{ARMHF_COMPILER_PATH}%/arm-linux-gnueabihf/include/c++/6.1.1/",
                 "%{ARMHF_COMPILER_PATH}%/arm-linux-gnueabihf/libc/usr/include/",
                 "/usr/include",
             ]

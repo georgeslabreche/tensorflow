@@ -239,22 +239,22 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
     tf_http_archive(
         name = "aarch64_linux_toolchain",
         build_file = clean_dep("//third_party/toolchains/embedded/arm-linux:aarch64-linux-toolchain.BUILD"),
-        sha256 = "8ce3e7688a47d8cd2d8e8323f147104ae1c8139520eca50ccf8a7fa933002731",
-        strip_prefix = "gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu",
+        sha256 = "766318b341beb977190ddbb3527f266be72249524043c79dcb5eb8d78f1c9077",
+        strip_prefix = "gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu",
         urls = [
-            "https://storage.googleapis.com/mirror.tensorflow.org/developer.arm.com/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu.tar.xz",
-            "https://developer.arm.com/-/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu.tar.xz",
+            "https://releases.linaro.org/components/toolchain/binaries/6.1-2016.08/aarch64-linux-gnu/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu.tar.xz",
+            "https://releases.linaro.org/components/toolchain/binaries/6.1-2016.08/aarch64-linux-gnu/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu.tar.xz",
         ],
     )
 
     tf_http_archive(
         name = "armhf_linux_toolchain",
         build_file = clean_dep("//third_party/toolchains/embedded/arm-linux:armhf-linux-toolchain.BUILD"),
-        sha256 = "d4f6480ecaa99e977e3833cc8a8e1263f9eecd1ce2d022bb548a24c4f32670f5",
-        strip_prefix = "gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf",
+        sha256 = "4ca59c62a23f34ec1e7c53640166a4a5bd0d4b1eed4e1e0553e40ae123824525",
+        strip_prefix = "gcc-linaro-6.1.1-2016.08-x86_64_arm-linux-gnueabihf",
         urls = [
-            "https://storage.googleapis.com/mirror.tensorflow.org/developer.arm.com/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz",
-            "https://developer.arm.com/-/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz",
+            "https://releases.linaro.org/components/toolchain/binaries/6.1-2016.08/arm-linux-gnueabihf/gcc-linaro-6.1.1-2016.08-x86_64_arm-linux-gnueabihf.tar.xz",
+            "https://releases.linaro.org/components/toolchain/binaries/6.1-2016.08/arm-linux-gnueabihf/gcc-linaro-6.1.1-2016.08-x86_64_arm-linux-gnueabihf.tar.xz",
         ],
     )
 
