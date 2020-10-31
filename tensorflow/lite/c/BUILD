@@ -41,6 +41,14 @@ tflite_cc_shared_object(
 )
 
 cc_library(
+    name = "ujpeg",
+    srcs = ["ujpeg.cc"],
+    hdrs = ["ujpeg.h"],
+    copts = tflite_copts()
+)
+
+
+cc_library(
     name = "c_api_internal",
     hdrs = ["c_api_internal.h"],
     copts = tflite_copts(),
@@ -133,6 +141,7 @@ cc_library(
 
 # For use with library targets that can't use relative paths.
 exports_files([
+    "ujpeg.h",
     "c_api.h",
     "c_api_experimental.h",
     "common.h",
@@ -161,14 +170,15 @@ cc_test(
 )
 
 cc_test(
-    name = "c_test",
+    name = "image_classifier",
     size = "small",
-    srcs = ["c_test.c"],
+    srcs = ["image_classifier.c"],
     copts = tflite_copts(),
     data = [
         "//tensorflow/lite:testdata/add.bin",
     ],
     deps = [
+        ":ujpeg",
         ":c_api",
         ":c_api_experimental",
         ":common",

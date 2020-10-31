@@ -47,3 +47,7 @@ gradleBuild
 Podfile.lock
 Pods
 xcuserdata
+
+# SmartCamLuvsU
+deploy
+deploy.tar.gz
