@@ -7,12 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/**
- * TODO:
- *  [ ] Input mean and input STD as arguments.
- */ 
-
 typedef enum {
     UJ_INVALID_DECODING             = 10, // Error decoding the image.
     TF_ALLOCATE_TENSOR              = 11, // Error allocating tensors.
