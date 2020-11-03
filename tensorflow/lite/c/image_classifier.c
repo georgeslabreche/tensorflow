@@ -10,15 +10,19 @@
 
 /**
  * TODO:
- *  [ ] JPEG Decoder error handling.
- *  [ ] TFLite return error code.
  *  [ ] Input mean and input STD as arguments.
- *  [ ] Image resizing.
- *  [ ] Classification CSV report.
- *  [ ] Logging.
- *  [ ] Move images toGround.
- *  [ ] Batch image processing.
  */ 
+
+typedef enum {
+    UJ_INVALID_DECODING             = 10, // Error decoding the image.
+    TF_ALLOCATE_TENSOR              = 11, // Error allocating tensors.
+    TF_RESIZE_TENSOR                = 12, // Error resizing tensor.
+    TF_ALLOCATE_TENSOR_AFTER_RESIZE = 13, // Error allocating tensors after resize.
+    TF_COPY_BUFFER_TO_INPUT         = 14, // Error copying input from buffer.
+    TF_INVOKE_INTERPRETER           = 15, // Error invoking interpreter.
+    TF_COPY_OUTOUT_TO_BUFFER        = 16, // Error copying output to buffer.
+    FP_OPEN_LABELS_FILE             = 17  // Unable to open labels file
+} errorCode;
 
 // Dispose of the model and interpreter objects.
 int disposeTfLiteObjects(TfLiteModel* pModel, TfLiteInterpreter* pInterpreter)
@@ -34,31 +38,47 @@ int disposeTfLiteObjects(TfLiteModel* pModel, TfLiteInterpreter* pInterpreter)
     }
 }
 
-char *getBasename(char const *path)
-{
-    char *s = strrchr(path, '/');
-    if (!s)
-    {
-      return strdup(path);
-    }  
-    else
-    {
-       return strdup(s + 1);
-    }
-       
-}
-
 /**
  * The main function.
- * args 1 is the image filename.
- * args 2 is the model filename.
+ * argv[1] is the image filename.
+ * argv[2] is the model filename.
+ * argv[3] is the class labels filename.
+ * argv[4] is the image input height.
+ * argv[5] is the image input width.
+ * argv[6] is the input mean. Scale pixel values to this mean.
+ * argv[7] is the input standard deviation. Scale pixel values to this standard deviation.
  */
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
+    // Input parameters.
     const char* imageFilePath = argv[1];
     const char* modelFilePath = argv[2];
+    const char* labelsFilePath = argv[3];
 
+    int inputImageHeight;
+    sscanf(argv[4], "%d", &inputImageHeight);
+
+    int inputImageWidth;
+    sscanf(argv[5], "%d", &inputImageWidth);
+
+    float inputMean;
+    sscanf(argv[6], "%f", &inputMean);
+
+    float inputStandardDeviation;
+    sscanf(argv[7], "%f", &inputStandardDeviation);
+
+    // There will always be 3 channels.
+    int channel = 3;
+
+    // Return codes for error handling.
     TfLiteStatus tflStatus;
+    ujResult ujRes;
+
+    /**
+     * STEP 1.
+     * Decode the JPEG image input to produce an RGB pixel values buffer array.
+     * Use the NanoJPEG library.
+     */ 
 
     // Create JPEG image object.
     ujImage img = ujCreate();
@@ -66,35 +86,108 @@ int main(int argc, char *argv[])
     // Decode the JPEG file.
     ujDecodeFile(img, imageFilePath);
 
-    // Check if decoding was successful.
-    if(ujIsValid(img) == 0){
-        printf("Error decoding image.\n");
-        return 1;
+    // Exit program with error code if previous JPEG processing operation resulted in an error.
+    ujRes = ujGetError();
+    if(ujRes != UJ_OK)
+    {
+      return ujRes;
     }
     
-    // There will always be 3 channels.
-    int channel = 3;
+    // Check if decoding was successful.
+    if(ujIsValid(img) == 0)
+    {
+        return UJ_INVALID_DECODING;
+    }
 
-    // Height will always be 224, no need for resizing.
+    // The input image is assumed to have its height pixel size equal to the inputImageHeight parameter so no need for resizing.
+    // FIXME: Don't assume. Check and resize if necessary. Will have to use a lightweight image manipulation library.
     int height = ujGetHeight(img);
 
-    // Width will always be 224, no need for resizing.
+    // Exit program with error code if previous JPEG processing operation resulted in an error.
+    ujRes = ujGetError();
+    if(ujRes != UJ_OK)
+    {
+      return ujRes;
+    }
+
+    // The input image is assumed to have its width pixel size equal to the inputImageWidth parameter so no need for resizing.
+    // FIXME: Don't assume. Check and resize if necessary. Will have to use a lightweight image manipulation library.
     int width = ujGetWidth(img);
+
+    // Exit program with error code if previous JPEG processing operation resulted in an error.
+    ujRes = ujGetError();
+    if(ujRes != UJ_OK)
+    {
+      return ujRes;
+    }
 
     // The image size is channel * height * width.
     int imageSize = ujGetImageSize(img);
 
+    // Exit program with error code if previous JPEG processing operation resulted in an error.
+    ujRes = ujGetError();
+    if(ujRes != UJ_OK)
+    {
+      return ujRes;
+    }
+
     // Fetch RGB data from the decoded JPEG image input file.
     uint8_t* pImage = (uint8_t*)ujGetImage(img, NULL);
+
+    // Exit program with error code if previous JPEG processing operation resulted in an error.
+    ujRes = ujGetError();
+    if(ujRes != UJ_OK)
+    {
+      return ujRes;
+    }
 
     // The array that will collect the JPEG's RGB values.
     float imageDataBuffer[imageSize];
 
-    // RGB range is 0-255. Scale it to 0-1.
+    // RGB range is 0-255. Rescale it based on given input mean and standard deviation.
+    // e.g. with input mean 0 and inpt std 255 the 0-255 RGB range is rescaled to 0-1.
     for(int i = 0; i < imageSize; i++)
     {
-        imageDataBuffer[i] = (float)pImage[i] / 255.0;
+        imageDataBuffer[i] = ((float)pImage[i] - inputMean) / inputStandardDeviation;
     }
+
+    /**
+     * STEP 2.
+     * Read the labels file to count the number of labels.
+     */
+
+    // Count the nunber of image class labels included in the labels file.
+    int label_counter = 0;
+
+    // Open labels file to fetch and count labels listed in that file.
+    FILE *fpLabels = fopen(labelsFilePath, "r");
+
+    // Check that labels file was opened.
+    if(fpLabels == NULL) 
+    {
+      return FP_OPEN_LABELS_FILE;
+    }
+
+    // Count the number of labels in the labels file.
+    int labelsCount = 0;
+    while(!feof(fpLabels))
+    {
+        char ch = fgetc(fpLabels);
+        if(ch == '\n')
+        {
+          labelsCount++;
+        }
+    }
+
+    // Rewind labels file pointer back to the begining of the file in order to prep for more file reading later.
+    fseek(fpLabels, 0, SEEK_SET);
+
+    /**
+     * STEP 3.
+     * Load the predition model.
+     * Prepare the image tensor input.
+     * Set the input dimension.
+     */
 
     // Load model.
     TfLiteModel* model = TfLiteModelCreateFromFile(modelFilePath);
@@ -108,20 +201,18 @@ int main(int argc, char *argv[])
     // Log and exit in case of error.
     if(tflStatus != kTfLiteOk)
     {
-      printf("Error allocating tensors.\n");
       disposeTfLiteObjects(model, interpreter);
-      return 1;
+      return TF_ALLOCATE_TENSOR;
     }
     
-    int inputDims[4] = {1, 224, 224, 3};
+    int inputDims[4] = {1, inputImageHeight, inputImageWidth, channel};
     tflStatus = TfLiteInterpreterResizeInputTensor(interpreter, 0, inputDims, 4);
 
     // Log and exit in case of error.
     if(tflStatus != kTfLiteOk)
     {
-      printf("Error resizing tensor.\n");
       disposeTfLiteObjects(model, interpreter);
-      return 1;
+      return TF_RESIZE_TENSOR;
     }
 
     tflStatus = TfLiteInterpreterAllocateTensors(interpreter);
@@ -129,10 +220,14 @@ int main(int argc, char *argv[])
     // Log and exit in case of error.
     if(tflStatus != kTfLiteOk)
     {
-      printf("Error allocating tensors after resize.\n");
       disposeTfLiteObjects(model, interpreter);
-      return 1;
+      return TF_ALLOCATE_TENSOR_AFTER_RESIZE;
     }
+
+    /**
+     * STEP 4.
+     * Invoke the TensorFlow intepreter given the input and the model.
+     */
 
     // The input tensor.
     TfLiteTensor* inputTensor = TfLiteInterpreterGetInputTensor(interpreter, 0);
@@ -141,12 +236,10 @@ int main(int argc, char *argv[])
     tflStatus = TfLiteTensorCopyFromBuffer(inputTensor, imageDataBuffer, imageSize * sizeof(float));
     
     // Log and exit in case of error.
-    // FIXME: Error occurs here.
     if(tflStatus != kTfLiteOk)
     {
-      printf("Error copying input from buffer.\n");
       disposeTfLiteObjects(model, interpreter);
-      return 1;
+      return TF_COPY_BUFFER_TO_INPUT;
     }
 
     // Invoke interpreter.
@@ -155,34 +248,90 @@ int main(int argc, char *argv[])
     // Log and exit in case of error.
     if(tflStatus != kTfLiteOk)
     {
-      printf("Error invoking interpreter.\n");
       disposeTfLiteObjects(model, interpreter);
-      return 1;
+      return TF_INVOKE_INTERPRETER;
     }
+
+    /**
+     * STEP 5.
+     * Get the prediction output from feeding the image into the prediction model.
+     */
 
     // Extract the output tensor data.
     const TfLiteTensor* outputTensor = TfLiteInterpreterGetOutputTensor(interpreter, 0);
 
-    // There are three possible labels. Size the output accordingly.
-    float output[3];
-    tflStatus = TfLiteTensorCopyToBuffer(outputTensor, output, 3 * sizeof(float));
+    // Size the model output based on the number of labels counted in the labels file.
+    float output[labelsCount];
+    tflStatus = TfLiteTensorCopyToBuffer(outputTensor, output, labelsCount * sizeof(float));
 
     // Log and exit in case of error.
     if(tflStatus != kTfLiteOk)
     {
-      printf("Error copying output to buffer.\n");
+      // Close file pointer to labels file.
+      fclose(fpLabels);
+
+      // Dispose of the TensorFlow Lite objects.
       disposeTfLiteObjects(model, interpreter);
-      return 1;
+
+      // Return error code.
+      return TF_COPY_OUTOUT_TO_BUFFER;
     }
 
-    // Print out classification result.
-    printf("Predictions for %s - [bad: %f, earth: %f, edge: %f]\n", getBasename(imageFilePath), output[0], output[1], output[2]); 
+    /**
+     * STEP 6.
+     * Read the labels file and write into stdout a JSON object string of the image classification result.
+     * The JSON object will have labels as key and prediction confidences as values.
+     */
+
+    // The label string buffer.
+    char labelBuffer[128]; 
+
+    // The output index for the model output array.
+    int outputIndex = 0;
+
+    // Start writing the JSON object string into stdout.
+    printf("{");
+
+    // Write the <label, prediction> key value pairs into stdout.
+    while(fgets(labelBuffer, sizeof(labelBuffer), fpLabels) != NULL) 
+    {
+      // Remove the last character of the label string, it's a new line character.
+      labelBuffer[strlen(labelBuffer)-1] = '\0';
+
+      // Print to stdout the prediction key value pair for the current output/label.
+      if(outputIndex < (labelsCount-1))
+      {
+        // We expect another key value pair after this so include a comma.
+        printf("\"%s\": %f, ", labelBuffer, output[outputIndex]);
+      }
+      else
+      {
+        // This is the last key value pair, don't include a comma.
+        printf("\"%s\": %f", labelBuffer, output[outputIndex]);
+      }
+
+      // Incremenet output index for the next iteration.
+      outputIndex++;
+    }
+
+    // Finish writing the JSON object string into stdout.
+    printf("}");
+
+    // Close file pointer to labels file.
+    fclose(fpLabels);
+
+    /**
+     * STEP 7.
+     * Cleanup.
+     * Dispose of some objects.
+     */
 
     // Dispose of the TensorFlow objects.
     disposeTfLiteObjects(model, interpreter);
     
-    // Dispoice of the image object.
+    // Dispose of the image object.
     ujFree(img);
     
+    // Program return code.
     return 0;
 }
