@@ -1,10 +1,10 @@
 ## What happened here?
 
-This respository has been hijacked to build the image classification program used by the SmartCamLuvsU app on the European Space Agency's OPS-SAT spacecraft. This is in no means a permanent solution and is merely an overklill hack to take advantage of TensorFlow repository's preconfigured Bazel build system so that the program can be quickly compiled for the spacecraft's ARM32 architecture. 
+This respository has been hijacked to build the image classification program used by the SmartCamLuvsU app on the European Space Agency's [OPS-SAT](https://www.esa.int/Enabling_Support/Operations/OPS-SAT_your_flying_laboratory) spacecraft. This is in no means a permanent solution. It is an overklill hack to take advantage of TensorFlow's Bazel build system so that the program can be quickly compiled for the spacecraft's ARM32 architecture. 
 
 ## How do I build and deploy?
 
-The image classification source code is in the `//tensorflow/lite/c directory`. The commands in the following instructions are executed from this repository's home directory.
+The image classification source code is in the `//tensorflow/lite/c` directory. The commands in the following instructions are executed from this repository's home directory.
 
 ### Compile
 
