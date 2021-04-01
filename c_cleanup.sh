@@ -3,7 +3,7 @@
 arch="armhf"
 #arch="k8"
 
-app_name="SmartCamLuvsU"
+app_name="opssat_smartcam"
 program_filename="image_classifier"
 
 # Clear deployment directory.
